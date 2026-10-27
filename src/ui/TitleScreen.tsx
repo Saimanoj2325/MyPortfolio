@@ -66,9 +66,11 @@ export function TitleScreen() {
             <button className="btn-title-ghost" onClick={toggleSound}>
               Sound {sound ? 'ON' : 'OFF'}
             </button>
+            {/* Recruiter view commented out for now
             <a className="title-tour-link" href="#tour" onClick={() => useStore.getState().setPhase('tour')}>
               2-min recruiter tour →
             </a>
+            */}
           </div>
         </div>
         <p className="title-help-keys t-anim">

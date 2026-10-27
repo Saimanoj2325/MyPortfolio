@@ -59,7 +59,9 @@ type State = {
 let key = 1
 
 export const useStore = create<State>((set, get) => ({
-  phase: typeof window !== 'undefined' && /tour|recruiter/.test(window.location.hash) ? 'tour' : 'loading',
+  // Recruiter tour commented out for now
+  // phase: typeof window !== 'undefined' && /tour|recruiter/.test(window.location.hash) ? 'tour' : 'loading',
+  phase: 'loading',
   nearby: null,
   sound: false,
   paused: false,

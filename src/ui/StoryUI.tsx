@@ -355,7 +355,9 @@ function PauseMenu() {
         <div className="pause-row">
           <button className="btn btn-solid" onClick={() => setPaused(false)}>Resume</button>
           <button className="btn" onClick={toggleSound}>Sound: {sound ? 'on' : 'off'}</button>
+          {/* Recruiter view commented out for now
           <a className="btn" href="#tour" onClick={() => { useStore.getState().setPhase('tour') }}>Recruiter tour</a>
+          */}
         </div>
         <p className="card-kicker pause-sub">Chapters</p>
         <ol className="chapters">
