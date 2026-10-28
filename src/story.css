@@ -1052,14 +1052,67 @@
   margin-bottom: 22px;
 }
 
+.telescope-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, #1c2638 0%, #0d121c 70%, #06080d 100%);
+  pointer-events: none;
+}
+
 .telescope-mountain-layer {
   position: absolute;
   inset: -15%;
-  background-size: cover;
-  background-position: center 38%;
-  background-repeat: no-repeat;
+  width: 130%;
+  height: 130%;
   will-change: transform;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telescope-mountain-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  pointer-events: none;
+  user-select: none;
+}
+
+.telescope-mountain-img.is-loaded {
+  opacity: 1;
+}
+
+.telescope-focusing-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: rgba(212, 175, 55, 0.85);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.telescope-lens-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: tele-spin 0.9s linear infinite;
+}
+
+@keyframes tele-spin {
+  to { transform: rotate(360deg); }
 }
 
 .telescope-clouds-layer {

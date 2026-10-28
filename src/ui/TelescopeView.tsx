@@ -5,10 +5,19 @@ interface TelescopeViewProps {
   onClose: () => void
 }
 
+const MOUNTAIN_IMAGES = [
+  `${import.meta.env.BASE_URL}mountains.jpg`,
+  '/mountains.jpg',
+  './mountains.jpg',
+  `${import.meta.env.BASE_URL}telescope_mountains.jpg`,
+  '/telescope_mountains.jpg',
+]
+
 /**
  * Optical Telescope View: Majestic Alpine Mountains
  * Features:
  * - Crystal-clear, high-definition glaciated alpine mountain peaks
+ * - Automatic image resolution & fallback cascade with focusing ring
  * - Smooth interactive telescope panning with optical inertia
  * - Drifting valley clouds and anti-reflective lens coating sheen
  * - Precision brass telescope HUD with compass azimuth, altitude, and reticle crosshairs
@@ -21,6 +30,8 @@ export function TelescopeView({ onClose }: TelescopeViewProps) {
 
   const [azimuthDeg, setAzimuthDeg] = useState(318)
   const [altMeters, setAltMeters] = useState(6852)
+  const [imgIndex, setImgIndex] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // Keyboard controls: press Esc or E to step away
   useEffect(() => {
@@ -101,7 +112,11 @@ export function TelescopeView({ onClose }: TelescopeViewProps) {
           const y = canvas.height * 0.58 + Math.sin((x + i * 40) * 0.015) * 14
           ctx.beginPath()
           ctx.ellipse(x, y, 75, 22, 0, 0, Math.PI * 2)
-          ctx.filter = 'blur(16px)'
+          try {
+            if ('filter' in ctx) ctx.filter = 'blur(16px)'
+          } catch {
+            // gracefully fallback if canvas filter is unsupported
+          }
           ctx.fill()
         }
         ctx.restore()
@@ -141,14 +156,33 @@ export function TelescopeView({ onClose }: TelescopeViewProps) {
 
         {/* Optical Telescope Viewport */}
         <div className="telescope-viewport-wrap">
-          {/* High-Definition Alpine Mountain Vista */}
-          <div
-            ref={mountainRef}
-            className="telescope-mountain-layer"
-            style={{
-              backgroundImage: `url(${import.meta.env.BASE_URL}mountains.jpg)`,
-            }}
-          />
+          {/* Subtle celestial backdrop */}
+          <div className="telescope-backdrop" />
+
+          {/* High-Definition Alpine Mountain Vista with responsive multi-path fallback */}
+          <div ref={mountainRef} className="telescope-mountain-layer">
+            <img
+              src={MOUNTAIN_IMAGES[imgIndex]}
+              alt="Towering Alpine Mountain Summits"
+              className={`telescope-mountain-img ${isLoaded ? 'is-loaded' : ''}`}
+              loading="eager"
+              decoding="async"
+              onLoad={() => setIsLoaded(true)}
+              onError={() => {
+                if (imgIndex + 1 < MOUNTAIN_IMAGES.length) {
+                  setImgIndex((prev) => prev + 1)
+                }
+              }}
+            />
+          </div>
+
+          {/* Focusing Lens Loading Ring */}
+          {!isLoaded && (
+            <div className="telescope-focusing-indicator">
+              <div className="telescope-lens-spinner" />
+              <span>Focusing optics…</span>
+            </div>
+          )}
 
           {/* Drifting Valley Cloud Layer */}
           <canvas ref={cloudCanvasRef} width={440} height={440} className="telescope-clouds-layer" />

@@ -136,18 +136,13 @@ function Laptop() {
 }
 
 function Window() {
-  const tex = useMemo(() => {
-    const loader = new THREE.TextureLoader()
-    const t = loader.load(`${import.meta.env.BASE_URL}mountains.jpg`)
-    t.colorSpace = THREE.SRGBColorSpace
-    return t
-  }, [])
+  const tex = useUserPhotoTexture('mountains.jpg')
   return (
     <group position={[-0.9, 1.75, -ROOM.d / 2 + 0.02]}>
       {/* Crystal-clear alpine mountain vista through window pane */}
       <mesh position={[0, 0, 0]}>
         <planeGeometry args={[1.6, 1.1]} />
-        <meshBasicMaterial map={tex} toneMapped={true} />
+        <meshBasicMaterial map={tex || undefined} color={tex ? '#ffffff' : '#8fa9c4'} toneMapped={true} />
       </mesh>
       <mesh material={flat(PALETTE.ink)} position={[0, 0, 0.01]}><boxGeometry args={[1.7, 0.06, 0.06]} /></mesh>
       <mesh material={flat(PALETTE.ink)} position={[0, 0, 0.01]}><boxGeometry args={[0.05, 1.18, 0.06]} /></mesh>
