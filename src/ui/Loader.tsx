@@ -33,16 +33,29 @@ export function Loader() {
   const shown = useRef(0)
   const [display, setDisplay] = useState(0)
 
-  // Smooth number interpolation: guarantees graceful organic progress even if cached
+  // Smooth number interpolation: strictly monotonic, guarantees progress only moves forward to 100%
   useEffect(() => {
     let raf = 0
     const tick = () => {
-      // Clamp target strictly between 0 and 100
-      const target = Math.max(0, Math.min(100, progress || 0))
-      // Smooth organic approach: strictly positive, mathematically impossible to go negative
-      shown.current += (target - shown.current) * 0.12
-      const clamped = Math.max(0, Math.min(100, Math.round(shown.current)))
-      setDisplay(clamped)
+      const rawTarget = Math.max(0, Math.min(100, progress || 0))
+      // Target can never drop below what has already been reached
+      const target = Math.max(shown.current, rawTarget)
+
+      if (target >= 100) {
+        // Accelerate cleanly to 100% once assets are ready
+        const diff = 100 - shown.current
+        if (diff <= 1.0) {
+          shown.current = 100
+        } else {
+          shown.current += diff * 0.25 + 0.6
+        }
+      } else {
+        // Steady organic progress forward
+        shown.current += Math.max(0, (target - shown.current) * 0.12)
+      }
+
+      const nextVal = Math.max(0, Math.min(100, Math.round(shown.current)))
+      setDisplay((prev) => Math.max(prev, nextVal))
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -56,42 +69,32 @@ export function Loader() {
 
   // Active chapter beacons
   const activeChapterCount = useMemo(() => {
-    if (display >= 95) return 7
+    if (display >= 98) return 7
     return Math.max(0, Math.min(7, Math.floor((display / 100) * 7)))
   }, [display])
 
-  // Safety timer: guarantees the portfolio always transitions within 3.2 seconds
+  // Safety timer: if network stalls, safely animate the rest to 100%
   useEffect(() => {
     const safety = setTimeout(() => {
-      const s = useStore.getState()
-      if (s.phase === 'loading') {
-        const m = /ch=(\d)/.exec(window.location.hash)
-        if (m) {
-          s.setPhase('play')
-          s.jumpToChapter(+m[1])
-        } else {
-          s.setPhase('title')
-        }
-        if (root.current) {
-          gsap.to(root.current, {
-            opacity: 0,
-            scale: 1.02,
-            filter: 'blur(6px)',
-            duration: 0.8,
-            ease: 'power2.inOut',
-            onComplete: () => setGone(true),
-          })
-        } else {
-          setGone(true)
-        }
+      if (shown.current < 100) {
+        const interval = setInterval(() => {
+          shown.current += (100 - shown.current) * 0.35 + 2
+          if (shown.current >= 99.5) {
+            shown.current = 100
+            setDisplay(100)
+            clearInterval(interval)
+          } else {
+            setDisplay(Math.round(shown.current))
+          }
+        }, 30)
       }
     }, 3200)
     return () => clearTimeout(safety)
   }, [])
 
-  // Transition to title screen once loading completes smoothly
+  // Transition to title screen ONLY after display has genuinely reached 100%
   useEffect(() => {
-    if (phase !== 'loading' || (progress < 100 && display < 98)) return
+    if (phase !== 'loading' || display < 100) return
 
     let played = false
     const t = setTimeout(() => {
@@ -121,10 +124,10 @@ export function Loader() {
       } else {
         setGone(true)
       }
-    }, 350)
+    }, 450) // hold on 100% for 450ms so user sees the 100% completion state
 
     return () => clearTimeout(t)
-  }, [active, progress, display, phase, setPhase])
+  }, [display, phase, setPhase])
 
   if (gone) return null
 
