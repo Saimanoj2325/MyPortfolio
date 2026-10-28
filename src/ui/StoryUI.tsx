@@ -211,8 +211,15 @@ function MuseumPanel() {
       <article className="card museum" ref={ref} onPointerDown={(e) => e.stopPropagation()} role="dialog" aria-label={m.title}>
         <button className="card-close" onClick={() => setMuseum(null)} aria-label="Close">Close <kbd>E</kbd></button>
         {m.id === 'photos' && (
-          <div className="museum-photo-card p-anim">
-            <img src={`${import.meta.env.BASE_URL}profile.jpg`} alt={profile.name} className="museum-photo-img" />
+          <div className="museum-photos-gallery p-anim">
+            <div className="museum-photo-card card-wall">
+              <img src={`${import.meta.env.BASE_URL}photos/wall_portrait.png`} alt={`${profile.name} - Wall frame`} className="museum-photo-img" />
+              <span className="museum-photo-label">Wall Frame</span>
+            </div>
+            <div className="museum-photo-card card-desk">
+              <img src={`${import.meta.env.BASE_URL}photos/desk_portrait.jpg`} alt={`${profile.name} - Desk frame`} className="museum-photo-img" />
+              <span className="museum-photo-label">Desk Frame</span>
+            </div>
           </div>
         )}
         <p className="card-kicker p-anim">{m.kicker}</p>
@@ -423,6 +430,7 @@ function Finale() {
           <h3>{finale.cardTitle}</h3>
           <p className="finale-line">{finale.cardLine}</p>
           <div className="finale-links">
+            <a className="btn btn-solid" href={profile.resume} download>Download Résumé ↗</a>
             {socials.map((s) => <a key={s.label} className="btn" href={s.href} target="_blank" rel="noreferrer">{s.label} ↗</a>)}
             <a className="btn" href={`mailto:${email}`}>Email ↗</a>
           </div>

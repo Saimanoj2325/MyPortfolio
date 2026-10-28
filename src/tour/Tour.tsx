@@ -241,7 +241,7 @@ export function Tour() {
           <div className="t-contact-grid" data-reveal>
             <ContactForm />
             <ul className="t-socials">
-              {socials.map((x) => <li key={x.label}><a href={x.href}><span>{x.label}</span><em>{x.value}</em><Arrow /></a></li>)}
+              {socials.map((x) => <li key={x.label}><a href={x.href} target="_blank" rel="noreferrer"><span>{x.label}</span><em>{x.value}</em><Arrow /></a></li>)}
             </ul>
           </div>
           <footer className="t-foot">

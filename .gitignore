@@ -3,3 +3,5 @@ dist
 screenshots/*.tmp
 .DS_Store
 tsconfig.tsbuildinfo
+.env
+.env*.local

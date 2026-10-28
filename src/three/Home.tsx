@@ -1,7 +1,7 @@
 // The house: entering/leaving, and the interior as a small personal museum. Six stations:
 // photo frames (About), bookshelf (what I learn), notebook (skills), personal corner (beyond code),
 // window + telescope (ambitions), and the computer, which wakes into the projects OS.
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { Html, useGLTF } from '@react-three/drei'
@@ -159,44 +159,85 @@ function Window() {
   )
 }
 
-/** Loads the user's authentic portrait photo texture */
-function useUserPhotoTexture() {
-  return useMemo(() => {
+/** Loads an authentic portrait photo texture from public/photos with state reactivity */
+function useUserPhotoTexture(relPath: string) {
+  const [texture, setTexture] = useState<THREE.Texture | null>(null)
+
+  useEffect(() => {
+    let active = true
     const loader = new THREE.TextureLoader()
-    const t = loader.load(`${import.meta.env.BASE_URL}profile.jpg`)
-    t.colorSpace = THREE.SRGBColorSpace
-    return t
-  }, [])
+    const cleanPath = relPath.startsWith('/') ? relPath.slice(1) : relPath
+    const fullUrl = `${import.meta.env.BASE_URL}${cleanPath}`
+
+    loader.load(
+      fullUrl,
+      (tex) => {
+        if (!active) return
+        tex.colorSpace = THREE.SRGBColorSpace
+        tex.needsUpdate = true
+        setTexture(tex)
+      },
+      undefined,
+      (err) => {
+        console.error('Error loading texture from:', fullUrl, err)
+      }
+    )
+    return () => {
+      active = false
+    }
+  }, [relPath])
+
+  return texture
 }
 
-/** A single grand gallery frame on the wall, ready for the user's new photo */
-function WallPhotoFrame({ texture }: { texture: THREE.Texture }) {
-  const w = 0.74, h = 0.92
+/** A single grand gallery frame on the wall displaying the user's authentic portrait photo */
+function WallPhotoFrame({ texture }: { texture: THREE.Texture | null }) {
+  const w = 0.74, h = 0.94
+  const borderThick = 0.05
   return (
     <group position={[ROOM.w / 2 - 0.03, 1.68, -0.55]} rotation={[0, -Math.PI / 2, 0]}>
-      {/* Outer gilded gold frame moulding */}
-      <mesh castShadow material={flat('#cca238')} position={[0, 0, 0.014]}>
-        <boxGeometry args={[w + 0.10, h + 0.10, 0.028]} />
+      {/* Outer gilded gold frame backboard */}
+      <mesh castShadow material={flat('#cca238')} position={[0, 0, 0.008]}>
+        <boxGeometry args={[w + borderThick * 2, h + borderThick * 2, 0.016]} />
       </mesh>
-      {/* Dark mahogany inner trim */}
-      <mesh material={flat('#482d1a')} position={[0, 0, 0.020]}>
-        <boxGeometry args={[w + 0.02, h + 0.02, 0.022]} />
+
+      {/* Frame 4 borders (raised gold moulding) */}
+      <mesh material={flat('#d4af37')} position={[0, (h + borderThick) / 2, 0.022]}>
+        <boxGeometry args={[w + borderThick * 2, borderThick, 0.014]} />
       </mesh>
-      {/* Ivory mat mount */}
-      <mesh material={flat('#fdfaf4')} position={[0, 0, 0.023]}>
+      <mesh material={flat('#d4af37')} position={[0, -(h + borderThick) / 2, 0.022]}>
+        <boxGeometry args={[w + borderThick * 2, borderThick, 0.014]} />
+      </mesh>
+      <mesh material={flat('#d4af37')} position={[-(w + borderThick) / 2, 0, 0.022]}>
+        <boxGeometry args={[borderThick, h, 0.014]} />
+      </mesh>
+      <mesh material={flat('#d4af37')} position={[(w + borderThick) / 2, 0, 0.022]}>
+        <boxGeometry args={[borderThick, h, 0.014]} />
+      </mesh>
+
+      {/* Warm ivory mat mount */}
+      <mesh material={flat('#fdfaf4')} position={[0, 0, 0.017]}>
         <planeGeometry args={[w, h]} />
       </mesh>
-      {/* Photo print canvas */}
-      <mesh position={[0, 0, 0.026]}>
-        <planeGeometry args={[w - 0.12, h - 0.12]} />
-        <meshBasicMaterial map={texture} toneMapped={false} />
-      </mesh>
+
+      {/* Photo print canvas (always in front of the mat, never occluded) */}
+      {texture ? (
+        <mesh position={[0, 0, 0.020]}>
+          <planeGeometry args={[w - 0.08, h - 0.08]} />
+          <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
+        </mesh>
+      ) : (
+        <mesh position={[0, 0, 0.020]}>
+          <planeGeometry args={[w - 0.08, h - 0.08]} />
+          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} />
+        </mesh>
+      )}
     </group>
   )
 }
 
 /** A standing framed photo of Saimanoj on the work desk (100% clean, no marks or obstructions) */
-function DeskPhotoFrame({ texture }: { texture: THREE.Texture }) {
+function DeskPhotoFrame({ texture }: { texture: THREE.Texture | null }) {
   return (
     <group position={[DESK.x + 0.55, DESK.top, DESK.z + 0.12]} rotation={[0, -0.32, 0]}>
       {/* Frame tilted back 12 degrees */}
@@ -210,10 +251,12 @@ function DeskPhotoFrame({ texture }: { texture: THREE.Texture }) {
           <planeGeometry args={[0.155, 0.195]} />
         </mesh>
         {/* Crystal-clear user portrait photo */}
-        <mesh position={[0, 0.11, 0.011]}>
-          <planeGeometry args={[0.135, 0.175]} />
-          <meshBasicMaterial map={texture} toneMapped={false} />
-        </mesh>
+        {texture && (
+          <mesh position={[0, 0.11, 0.012]}>
+            <planeGeometry args={[0.135, 0.175]} />
+            <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
+          </mesh>
+        )}
       </group>
       {/* Back easel support safely behind the frame at desk level */}
       <mesh material={flat('#3e2515')} position={[0, 0.04, -0.04]} rotation={[0.40, 0, 0]}>
@@ -308,7 +351,8 @@ export function HomeInterior() {
   useRoomInteractable('m-corner', 2.0, 1.6, 1.1, st('corner').label, st('corner').verb, look('corner'))
   useRoomInteractable('m-telescope', -0.9, -1.45, 1.0, st('telescope').label, st('telescope').verb, look('telescope'))
   useRoomInteractable('m-computer', CHAIR.x, CHAIR.z + 0.5, 1.0, st('computer').label, st('computer').verb, () => { sitDown(); playSfx('tick'); useStore.getState().trigger('station', 'computer') })
-  const photoTexture = useUserPhotoTexture()
+  const wallPhotoTexture = useUserPhotoTexture('photos/wall_portrait.png')
+  const deskPhotoTexture = useUserPhotoTexture('photos/desk_portrait.jpg')
   if (!inside) return null
   const W = ROOM.w, D = ROOM.d, H = ROOM.h
   return (
@@ -327,7 +371,7 @@ export function HomeInterior() {
       <mesh material={flat('#6b5442')} position={[DOOR.x, 1.05, D / 2 - 0.04]}><boxGeometry args={[1.0, 2.1, 0.06]} /></mesh>
       <mesh material={flat('#c9a46a')} position={[DOOR.x + 0.38, 1.05, D / 2 - 0.09]}><sphereGeometry args={[0.04, 8, 6]} /></mesh>
       <Window />
-      <WallPhotoFrame texture={photoTexture} />
+      <WallPhotoFrame texture={wallPhotoTexture} />
       <Telescope />
       <NotebookTable />
       <CornerDecor />
@@ -336,7 +380,7 @@ export function HomeInterior() {
       <Furn piece="desk" x={DESK.x} z={DESK.z} />
       <Furn piece="chairDesk" x={CHAIR.x} z={CHAIR.z - 0.05} rot={180} />
       <Laptop />
-      <DeskPhotoFrame texture={photoTexture} />
+      <DeskPhotoFrame texture={deskPhotoTexture} />
       <Furn piece="computerScreen" x={DESK.x + 0.48} z={DESK.z - 0.18} y={DESK.top} s={1.6} rot={-12} />
       <mesh position={[DESK.x + 0.47, DESK.top + 0.3, DESK.z - 0.13]} rotation={[0, -0.21, 0]}><planeGeometry args={[0.52, 0.3]} /><meshBasicMaterial color={[0.55, 0.75, 0.9]} toneMapped={false} /></mesh>
       <Furn piece="lampRoundTable" x={DESK.x - 0.6} z={DESK.z - 0.18} y={DESK.top} s={1.6} />

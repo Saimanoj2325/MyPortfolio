@@ -12,6 +12,7 @@ import { leadership } from '../data/leadership'
 import { testimonials } from '../data/testimonials'
 import { posts } from '../data/writing'
 import { email, socials } from '../data/contact'
+import { submitToGoogleSheet } from '../lib/feedback'
 
 const Arrow = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -239,7 +240,11 @@ export function ContactForm() {
   const [msg, setMsg] = useState('')
   const href = `mailto:${email}?subject=${encodeURIComponent(`Hello from ${name || 'your portfolio'}`)}&body=${encodeURIComponent(`${msg}\n\n— ${name}${from ? ` (${from})` : ''}`)}`
   return (
-    <form className="sx-form" onSubmit={(e) => { e.preventDefault(); window.location.href = href }}>
+    <form className="sx-form" onSubmit={(e) => {
+      e.preventDefault()
+      submitToGoogleSheet({ name, email: from, message: msg, source: 'Contact Form' })
+      window.location.href = href
+    }}>
       <label><span>Name</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada Lovelace" /></label>
       <label><span>Email</span><input type="email" value={from} onChange={(e) => setFrom(e.target.value)} placeholder="ada@company.com" /></label>
       <label className="full"><span>Message</span><textarea rows={4} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Tell me about the project…" /></label>
@@ -256,7 +261,7 @@ export function Contact({ onCopied }: { onCopied?: () => void }) {
         <span>{copied ? 'Copied ✓' : email}</span>
       </button>
       <div className="sx-socials">
-        {socials.map((s) => <a key={s.label} href={s.href}><span>{s.label}</span><Arrow /></a>)}
+        {socials.map((s) => <a key={s.label} href={s.href} target="_blank" rel="noreferrer"><span>{s.label}</span><Arrow /></a>)}
       </div>
       <ContactForm />
     </div>

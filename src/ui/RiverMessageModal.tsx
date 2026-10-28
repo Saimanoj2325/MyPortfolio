@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { safeStorage, useStore } from '../store'
 import { playSfx } from './sound'
 import { camState } from '../lib/actors'
+import { submitToGoogleSheet } from '../lib/feedback'
 
 export function RiverMessageModal() {
   const open = useStore((s) => s.riverMessageOpen)
@@ -60,18 +61,12 @@ export function RiverMessageModal() {
     }
     setError('')
 
-    try {
-      const prev = JSON.parse(safeStorage.get('who_am_i_river_messages') || '[]')
-      prev.push({
-        name: name.trim() || 'Anonymous Traveler',
-        email: email.trim() || '',
-        message: message.trim(),
-        date: new Date().toISOString(),
-      })
-      safeStorage.set('who_am_i_river_messages', JSON.stringify(prev))
-    } catch {
-      // safe fallback
-    }
+    submitToGoogleSheet({
+      name: name.trim() || 'Anonymous Traveler',
+      email: email.trim() || '',
+      message: message.trim(),
+      source: 'River Bottle',
+    })
 
     playSfx('seal')
     playSfx('success')

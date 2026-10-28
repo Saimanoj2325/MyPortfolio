@@ -14,8 +14,8 @@ export const profile = {
   ],
   born: '23 Oct 2006',
   location: 'Hyderabad, India',
-  photo: '',
-  resume: 'Kura Sai Manoj_AiEngineer.pdf',
+  photo: '/photos/wall_portrait.png',
+  resume: '/Kura Sai Manoj_AiEngineer.pdf',
   availability: 'Open to AI/ML & Software Engineering Opportunities',
   annotations: ['AI/ML Engineer', 'Agentic Systems'],
 }

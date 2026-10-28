@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { useStore } from '../store'
+import { playSfx } from './sound'
 
 export function TitleScreen() {
   const ref = useRef<HTMLDivElement>(null)
@@ -12,7 +13,7 @@ export function TitleScreen() {
     gsap.fromTo(
       ref.current.querySelectorAll('.t-anim'),
       { opacity: 0, y: 18, filter: 'blur(8px)' },
-      { opacity: 1, y: 0, filter: 'blur(0px)', stagger: 0.12, duration: 1.2, ease: 'expo.out', delay: 0.2 }
+      { opacity: 1, y: 0, filter: 'blur(0px)', stagger: 0.12, duration: 1.2, ease: 'expo.out', delay: 0.15 }
     )
   }, [])
 
@@ -23,12 +24,16 @@ export function TitleScreen() {
     if (s.phase !== 'title') return
     beginning.current = true
 
+    try { playSfx('start') } catch {}
+
     const el = ref.current
     if (el) {
       gsap.to(el, {
         opacity: 0,
-        duration: 0.6,
-        ease: 'power2.out',
+        y: -8,
+        filter: 'blur(6px)',
+        duration: 0.7,
+        ease: 'power2.inOut',
         onComplete: () => {
           useStore.getState().setPhase('play')
           useStore.getState().showCard(1)
@@ -38,6 +43,11 @@ export function TitleScreen() {
       useStore.getState().setPhase('play')
       useStore.getState().showCard(1)
     }
+  }
+
+  const handleToggleSound = () => {
+    toggleSound()
+    try { playSfx('tick') } catch {}
   }
 
   useEffect(() => {
@@ -63,7 +73,7 @@ export function TitleScreen() {
             </svg>
           </button>
           <div className="title-secondary-actions">
-            <button className="btn-title-ghost" onClick={toggleSound}>
+            <button className="btn-title-ghost" onClick={handleToggleSound}>
               Sound {sound ? 'ON' : 'OFF'}
             </button>
             {/* Recruiter view commented out for now
